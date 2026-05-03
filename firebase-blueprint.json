@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile for compliance tracking and access control",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "onboardingCompleted": { "type": "boolean" },
+        "isPremium": { "type": "boolean" },
+        "accessStatus": { 
+          "type": "string", 
+          "enum": ["Guest", "Pending", "Approved", "Rejected"],
+          "description": "Status of the user's request to access the premium app features"
+        },
+        "businessProfile": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "industry": { "type": "string" },
+            "stage": { "type": "string" },
+            "location": { "type": "string" }
+          }
+        }
+      },
+      "required": ["uid", "email", "createdAt", "onboardingCompleted"]
+    },
+    "ConsultationBooking": {
+      "title": "ConsultationBooking",
+      "description": "A booking request for an expert consultation (available to approved users)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "expertName": { "type": "string" },
+        "type": { "type": "string", "enum": ["National", "International"] },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pending Approval", "Confirmed", "Rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "expertName", "status", "createdAt"]
+    },
+    "AppConfig": {
+      "title": "AppConfig",
+      "description": "Global application configuration",
+      "type": "object",
+      "properties": {
+        "requireConsultation": { "type": "boolean" },
+        "internationalEnabled": { "type": "boolean" },
+        "nationalEnabled": { "type": "boolean" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "UserProfile" },
+      "description": "User profile collection"
+    },
+    "/config/global": {
+      "schema": { "$ref": "AppConfig" },
+      "description": "Global app settings"
+    },
+    "/bookings/{bookingId}": {
+      "schema": { "$ref": "ConsultationBooking" },
+      "description": "Expert consultation bookings"
+    }
+  }
+}

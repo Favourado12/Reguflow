@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper Functions ---
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isAdmin() { return isSignedIn() && request.auth.token.email == 'eshietfavour23@gmail.com'; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // --- User Profiles ---
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      
+      function isValidUserProfile(data) {
+        return data.uid == request.auth.uid 
+            && data.email == request.auth.token.email
+            && data.createdAt is string
+            && data.onboardingCompleted is bool
+            && (data.get('isPremium', false) is bool)
+            && (data.keys().hasAll(['uid', 'email', 'createdAt', 'onboardingCompleted']));
+      }
+
+      allow create: if isOwner(userId) && isVerified() && isValidUserProfile(incoming()) 
+                     && incoming().isPremium == false; // Prevent self-promotions
+      
+      allow update: if isOwner(userId) && isValidUserProfile(incoming()) && (
+        // Allow modifying onboarding and business profile
+        (incoming().diff(existing()).affectedKeys().hasOnly(['onboardingCompleted', 'businessProfile']))
+      ) || isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+    // --- Global Config ---
+    match /config/global {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // --- Expert Bookings ---
+    match /bookings/{bookingId} {
+      function isValidBooking(data) {
+        return data.userId == request.auth.uid
+            && data.expertName is string
+            && data.expertName.size() <= 100
+            && data.status in ['Pending Approval', 'Confirmed', 'Rejected']
+            && data.createdAt is string;
+      }
+
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow list: if isAdmin(); // Only admin can list all bookings
+      
+      allow create: if isSignedIn() && isValidBooking(incoming()) 
+                  && incoming().status == 'Pending Approval'; // Force initial status
+      
+      allow update: if isAdmin(); // Only admin can approve/reject
+      allow delete: if isAdmin();
+    }
+  }
+}
