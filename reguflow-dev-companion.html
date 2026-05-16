@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReguFlow Dev Companion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 16px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 25px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .tab-button:hover {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+
+        .chat-container {
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            max-width: 80%;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            margin-left: auto;
+            color: white;
+        }
+
+        .message.assistant {
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .message-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        input, textarea {
+            flex: 1;
+            padding: 15px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .compliance-section {
+            margin-bottom: 30px;
+        }
+
+        .compliance-section h3 {
+            color: #10b981;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .compliance-item {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #10b981;
+        }
+
+        .compliance-item h4 {
+            color: #34d399;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .compliance-item p {
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .compliance-item ul {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+
+        .compliance-item li {
+            color: #94a3b8;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        th {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            color: #cbd5e1;
+        }
+
+        tr:hover {
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge.covered {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .badge.missing {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .badge.partial {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .report-header {
+            text-align: center;
+            padding: 30px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .report-header h2 {
+            font-size: 2rem;
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+
+        .report-header p {
+            color: #94a3b8;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card .label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(16, 185, 129, 0.7);
+        }
+
+        .example-questions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .example-question {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .example-question:hover {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: #10b981;
+            transform: translateY(-2px);
+        }
+
+        .example-question p {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ ReguFlow Dev Companion</h1>
+            <p>Your AI-powered guide to understanding the ReguFlow codebase and Nigerian regulatory compliance</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('qa')">
+                <span class="icon">💬</span>
+                Codebase Q&A
+            </button>
+            <button class="tab-button" onclick="switchTab('docs')">
+                <span class="icon">📋</span>
+                Compliance Docs
+            </button>
+            <button class="tab-button" onclick="switchTab('gap')">
+                <span class="icon">🔍</span>
+                Gap Checker
+            </button>
+        </div>
+
+        <!-- Tab 1: Codebase Q&A -->
+        <div id="qa-tab" class="tab-content active">
+            <div class="card">
+                <h2 style="margin-bottom: 20px; color: #10b981;">Ask Questions About ReguFlow</h2>
+                
+                <div class="example-questions">
+                    <div class="example-question" onclick="askQuestion('What regulations does ReguFlow handle?')">
+                        <p>💡 What regulations does ReguFlow handle?</p>
+                    </div>
+                    <div class="example-question" onclick="askQuestion('How does the CAC registration flow work?')">
+                        <p>💡 How does the CAC registration flow work?</p>
+                    </div>
+                    <div class="example-question" onclick="askQuestion('What are the AML compliance requirements?')">
+                        <p>💡 What are the AML compliance requirements?</p>
+                    </div>
+                    <div class="example-question" onclick="askQuestion('Explain the share capital requirements')">
+                        <p>💡 Explain the share capital requirements</p>
+                    </div>
+                </div>
+
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message assistant">
+                            <div class="message-label">ReguFlow Assistant</div>
+                            <p>👋 Hello! I'm your ReguFlow Dev Companion. I can help you understand:</p>
+                            <ul style="margin-top: 10px; padding-left: 20px;">
+                                <li>The codebase structure and components</li>
+                                <li>Nigerian regulatory requirements (AML, CAC, FCCPC, etc.)</li>
+                                <li>Implementation details and best practices</li>
+                                <li>Compliance workflows and features</li>
+                            </ul>
+                            <p style="margin-top: 10px;">Ask me anything about the ReguFlow codebase!</p>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input 
+                            type="text" 
+                            id="chatInput" 
+                            placeholder="Ask about ReguFlow codebase, regulations, or features..."
+                            onkeypress="handleChatKeyPress(event)"
+                        />
+                        <button onclick="sendMessage()" id="sendButton">
+                            <span>Send</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Compliance Docs -->
+        <div id="docs-tab" class="tab-content">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 style="color: #10b981;">Compliance Documentation</h2>
+                    <button onclick="generateComplianceDocs()" id="generateButton">
+                        <span>📄 Generate Report</span>
+                    </button>
+                </div>
+
+                <div id="complianceReport" style="display: none;">
+                    <div class="report-header">
+                        <h2>ReguFlow Compliance Report</h2>
+                        <p>Generated on <span id="reportDate"></span></p>
+                    </div>
+
+                    <div class="quick-stats">
+                        <div class="stat-card">
+                            <div class="number">5</div>
+                            <div class="label">Regulations Covered</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="number">₦2B</div>
+                            <div class="label">Max Capital Req.</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="number">2026</div>
+                            <div class="label">Compliance Year</div>
+                        </div>
+                    </div>
+
+                    <div class="compliance-section">
+                        <h3>🏛️ CAC (Corporate Affairs Commission)</h3>
+                        <div class="compliance-item">
+                            <h4>Company Registration</h4>
+                            <p>ReguFlow implements a comprehensive CAC registration workflow following CAMA 2020 requirements.</p>
+                            <ul>
+                                <li><strong>Name Reservation:</strong> Integrated with CAC Public Search portal (search.cac.gov.ng)</li>
+                                <li><strong>Business Types:</strong> Supports Private Limited (LTD), Public Limited (PLC), Limited by Guarantee (LTD/GTE), and Unlimited (ULTD)</li>
+                                <li><strong>Director Requirements:</strong> Collects NIN, International Passport, or Driver's License</li>
+                                <li><strong>Document Upload:</strong> Signature specimens and ID verification</li>
+                                <li><strong>Fee Structure:</strong> ₦500 for name reservation</li>
+                            </ul>
+                        </div>
+                        <div class="compliance-item">
+                            <h4>Post-Incorporation Compliance</h4>
+                            <p>Annual returns and Persons with Significant Control (PSC) filings are mandatory for Nigerian entities.</p>
+                        </div>
+                    </div>
+
+                    <div class="compliance-section">
+                        <h3>💰 Share Capital Requirements</h3>
+                        <div class="compliance-item">
+                            <h4>Minimum Capital by Entity Type</h4>
+                            <ul>
+                                <li><strong>Mobile Money Operators (MMO):</strong> ₦2,000,000,000 (₦2 Billion)</li>
+                                <li><strong>Payment Service Solution Providers (PSSP):</strong> ₦100,000,000 (₦100 Million)</li>
+                                <li><strong>Super Agents:</strong> ₦50,000,000 (₦50 Million)</li>
+                            </ul>
+                            <p style="margin-top: 10px;">These requirements represent significant barriers to entry for fintech startups and are enforced by the Central Bank of Nigeria (CBN).</p>
+                        </div>
+                    </div>
+
+                    <div class="compliance-section">
+                        <h3>🔒 AML (Anti-Money Laundering)</h3>
+                        <div class="compliance-item">
+                            <h4>2026 Automated AML Enforcement</h4>
+                            <p><strong>Deadline:</strong> June 10, 2026</p>
+                            <ul>
+                                <li><strong>Real-time Transaction Monitoring:</strong> All PSSPs, MMOs, and Digital Banks must implement automated monitoring systems</li>
+                                <li><strong>Biometric Liveness KYC:</strong> Integration of biometric verification APIs required</li>
+                                <li><strong>Transaction Logging:</strong> Comprehensive audit trails for all financial transactions</li>
+                                <li><strong>Suspicious Activity Reporting:</strong> Automated flagging and reporting mechanisms</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="compliance-section">
+                        <h3>⚖️ FCCPC (Federal Competition & Consumer Protection Commission)</h3>
+                        <div class="compliance-item">
+                            <h4>Digital Lending Guidelines</h4>
+                            <p>Unregistered digital lenders face penalties of ₦100,000,000+ under 2026 enforcement logic.</p>
+                            <ul>
+                                <li><strong>Registration Requirement:</strong> All digital lending platforms must be registered with FCCPC</li>
+                                <li><strong>Consumer Protection:</strong> Transparent terms, fair interest rates, and ethical collection practices</li>
+                                <li><strong>Data Privacy:</strong> Compliance with NDPR (Nigeria Data Protection Regulation)</li>
+                                <li><strong>Penalties:</strong> Severe fines for non-compliance, including operational shutdowns</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="compliance-section">
+                        <h3>🤖 AI Governance (NITDA Framework)</h3>
+                        <div class="compliance-item">
+                            <h4>2026 AI Ethical Framework</h4>
+                            <p>All AI agents operating in the Nigerian financial sector must implement "Storage Guard" protocols.</p>
+                            <ul>
+                                <li><strong>Storage Guard Protocol:</strong> Prevents autonomous deletion of transaction logs or user data</li>
+                                <li><strong>Explainability:</strong> AI decisions must be traceable and explainable</li>
+                                <li><strong>Human-in-the-Loop (HITL):</strong> Critical actions require human approval</li>
+                                <li><strong>Risk Mitigation:</strong> Comprehensive risk assessment for AI systems</li>
+                                <li><strong>Liability:</strong> Entities are strictly liable for autonomous agent misbehavior</li>
+                            </ul>
+                        </div>
+                        <div class="compliance-item">
+                            <h4>ReguFlow AI Implementation</h4>
+                            <p>ReguFlow uses Google Gemini AI with the following safeguards:</p>
+                            <ul>
+                                <li>Contextual prompts for Nigerian regulatory compliance</li>
+                                <li>Separate contexts for National vs. International regulations</li>
+                                <li>Chat history preservation and audit trails</li>
+                                <li>User feedback mechanisms for AI responses</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="compliance-section">
+                        <h3>📊 Additional Compliance Features</h3>
+                        <div class="compliance-item">
+                            <h4>Regulatory Search & Analysis</h4>
+                            <p>ReguFlow provides AI-powered search and analysis tools for regulatory queries.</p>
+                        </div>
+                        <div class="compliance-item">
+                            <h4>Compliance Roadmap Generator</h4>
+                            <p>Generates step-by-step compliance roadmaps based on business type and operational context.</p>
+                        </div>
+                        <div class="compliance-item">
+                            <h4>Expert Consultation Booking</h4>
+                            <p>Integrated scheduling system for regulatory expert consultations.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="compliancePlaceholder">
+                    <div style="text-align: center; padding: 60px 20px; color: #64748b;">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">📋</div>
+                        <h3 style="color: #94a3b8; margin-bottom: 10px;">No Report Generated</h3>
+                        <p>Click "Generate Report" to create a comprehensive compliance documentation report.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Gap Checker -->
+        <div id="gap-tab" class="tab-content">
+            <div class="card">
+                <h2 style="margin-bottom: 20px; color: #10b981;">Nigerian Regulatory Gap Analysis</h2>
+                <p style="color: #94a3b8; margin-bottom: 30px;">
+                    This table shows which Nigerian regulations are covered in the ReguFlow codebase and which areas need attention.
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Regulation</th>
+                            <th>Authority</th>
+                            <th>Status</th>
+                            <th>Implementation Details</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>CAC Registration</strong></td>
+                            <td>Corporate Affairs Commission</td>
+                            <td><span class="badge covered">✓ Covered</span></td>
+                            <td>Full registration workflow with name search, director info, and document upload</td>
+                            <td>High</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Share Capital Requirements</strong></td>
+                            <td>Central Bank of Nigeria</td>
+                            <td><span class="badge covered">✓ Covered</span></td>
+                            <td>Documentation includes MMO (₦2B), PSSP (₦100M), Super Agent (₦50M) requirements</td>
+                            <td>High</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AML Compliance</strong></td>
+                            <td>CBN / EFCC</td>
+                            <td><span class="badge covered">✓ Covered</span></td>
+                            <td>June 10, 2026 deadline documented; real-time monitoring and biometric KYC requirements noted</td>
+                            <td>Critical</td>
+                        </tr>
+                        <tr>
+                            <td><strong>FCCPC Lending Guidelines</strong></td>
+                            <td>Federal Competition & Consumer Protection Commission</td>
+                            <td><span class="badge covered">✓ Covered</span></td>
+                            <td>Digital lending registration requirements and ₦100M+ penalty documentation</td>
+                            <td>High</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AI Governance</strong></td>
+                            <td>NITDA</td>
+                            <td><span class="badge covered">✓ Covered</span></td>
+                            <td>Storage Guard protocols, HITL requirements, and AI liability framework documented</td>
+                            <td>High</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NDPR (Data Protection)</strong></td>
+                            <td>NITDA</td>
+                            <td><span class="badge partial">⚠ Partial</span></td>
+                            <td>Referenced in context but no dedicated implementation workflow</td>
+                            <td>High</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CBN Circulars Tracking</strong></td>
+                            <td>Central Bank of Nigeria</td>
+                            <td><span class="badge partial">⚠ Partial</span></td>
+                            <td>General awareness of "Policy Pivot" risk but no automated tracking system</td>
+                            <td>Medium</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NITDA Guidelines</strong></td>
+                            <td>National Information Technology Development Agency</td>
+                            <td><span class="badge partial">⚠ Partial</span></td>
+                            <td>AI framework covered, but broader IT guidelines need expansion</td>
+                            <td>Medium</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tax Compliance (FIRS)</strong></td>
+                            <td>Federal Inland Revenue Service</td>
+                            <td><span class="badge missing">✗ Missing</span></td>
+                            <td>No implementation for VAT, WHT, or corporate tax compliance</td>
+                            <td>High</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SEC Registration</strong></td>
+                            <td>Securities and Exchange Commission</td>
+                            <td><span class="badge missing">✗ Missing</span></td>
+                            <td>No workflow for investment/securities platforms</td>
+                            <td>Medium</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PENCOM Compliance</strong></td>
+                            <td>National Pension Commission</td>
+                            <td><span class="badge missing">✗ Missing</span></td>
+                            <td>No pension remittance tracking for employers</td>
+                            <td>Low</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NCC Licensing</strong></td>
+                            <td>Nigerian Communications Commission</td>
+                            <td><span class="badge missing">✗ Missing</span></td>
+                            <td>No telecom/VAS licensing workflows</td>
+                            <td>Low</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AfCFTA Cross-Border</strong></td>
+                            <td>AfCFTA Secretariat</td>
+                            <td><span class="badge partial">⚠ Partial</span></td>
+                            <td>International context mentions it but no implementation</td>
+                            <td>Medium</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Insurance (NAICOM)</strong></td>
+                            <td>National Insurance Commission</td>
+                            <td><span class="badge missing">✗ Missing</span></td>
+                            <td>No insurance product compliance workflows</td>
+                            <td>Low</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 30px; padding: 20px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <h3 style="color: #10b981; margin-bottom: 15px;">📊 Summary</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div>
+                            <div style="font-size: 2rem; font-weight: 800; color: #10b981;">5</div>
+                            <div style="color: #94a3b8; font-size: 0.9rem;">Fully Covered</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 2rem; font-weight: 800; color: #fbbf24;">4</div>
+                            <div style="color: #94a3b8; font-size: 0.9rem;">Partially Covered</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 2rem; font-weight: 800; color: #ef4444;">5</div>
+                            <div style="color: #94a3b8; font-size: 0.9rem;">Missing</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 2rem; font-weight: 800; color: #34d399;">36%</div>
+                            <div style="color: #94a3b8; font-size: 0.9rem;">Coverage Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.closest('.tab-button').classList.add('active');
+        }
+
+        // Codebase knowledge base
+        const codebaseKnowledge = {
+            regulations: {
+                cac: "ReguFlow implements a comprehensive CAC (Corporate Affairs Commission) registration workflow following CAMA 2020. It includes name reservation (₦500 fee), director information collection (NIN/Passport/Driver's License), document upload for signatures and IDs, and support for multiple business types: Private Limited (LTD), Public Limited (PLC), Limited by Guarantee (LTD/GTE), and Unlimited (ULTD). The system integrates with the CAC Public Search portal at search.cac.gov.ng.",
+                aml: "AML compliance is critical with a June 10, 2026 deadline. All PSSPs, MMOs, and Digital Banks must implement real-time transaction monitoring and biometric liveness KYC APIs. The system emphasizes automated monitoring, suspicious activity reporting, and comprehensive audit trails.",
+                shareCapital: "Share capital requirements are enforced by CBN: ₦2 Billion for Mobile Money Operators (MMO), ₦100 Million for Payment Service Solution Providers (PSSP), and ₦50 Million for Super Agents. These represent significant barriers to entry for fintech startups.",
+                fccpc: "FCCPC (Federal Competition & Consumer Protection Commission) enforces digital lending guidelines. Unregistered digital lenders face penalties of ₦100M+ under 2026 enforcement. Requirements include registration, transparent terms, fair interest rates, ethical collection practices, and NDPR compliance.",
+                ai: "AI Governance follows NITDA's 2026 framework. All AI agents in Nigerian financial sector must implement 'Storage Guard' protocols preventing autonomous deletion of transaction logs or user data. Requirements include explainability, Human-in-the-Loop (HITL) for critical actions, risk mitigation, and strict liability for misbehavior."
+            },
+            components: {
+                app: "The main App.tsx component (1992 lines) manages the entire application state including authentication, chat, search, analysis, roadmap generation, and admin features. It uses Firebase for backend, Google Gemini AI for intelligence, and implements both National (Nigerian) and International regulatory contexts.",
+                cacForm: "CACRegistrationForm.tsx implements a 4-step wizard: (1) Name Reservation with CAC search integration, (2) Directors & Shareholders information, (3) Document Upload for IDs and signatures, (4) Final Submission summary. Uses motion/react for animations and shadcn/ui components.",
+                firebase: "Firebase integration provides authentication (Google OAuth), Firestore database for user profiles, bookings, and sessions. Configuration is optional - the app works without Firebase.",
+                gemini: "Google Gemini AI integration with separate contexts for Nigerian (NIGERIAN_REG_CONTEXT) and International (INTERNATIONAL_REG_CONTEXT) regulations. Supports chat, search, analysis, and roadmap generation."
+            },
+            features: {
+                search: "Regulatory search allows users to query Nigerian and international regulations. Uses Gemini AI with contextual prompts.",
+                analyzer: "Compliance analyzer evaluates business documents/plans against Nigerian regulations, identifying risks and providing recommendations.",
+                roadmap: "Compliance roadmap generator creates step-by-step guides for achieving regulatory compliance based on business type and stage.",
+                chat: "Interactive chat interface for regulatory questions with context-aware responses.",
+                booking: "Expert consultation booking system with calendar integration for scheduling regulatory advisory sessions.",
+                onboarding: "Multi-step onboarding flow collecting business profile (name, industry, stage, location) to personalize compliance recommendations."
+            },
+            architecture: {
+                frontend: "React + TypeScript with Vite build system. Uses shadcn/ui component library, Tailwind CSS for styling, motion/react for animations.",
+                backend: "Firebase (optional) for authentication and data persistence. Gemini AI for intelligence.",
+                routing: "React Router for navigation between different views.",
+                state: "React hooks (useState, useEffect) for state management. No external state management library.",
+                ui: "Dark theme with emerald green accent colors. Responsive design with mobile support."
+            }
+        };
+
+        // Chat functionality
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message
+            addMessage('user', message);
+            input.value = '';
+
+            // Disable send button
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<span class="loading"></span><span>Thinking...</span>';
+
+            // Simulate AI response
+            setTimeout(() => {
+                const response = generateResponse(message);
+                addMessage('assistant', response);
+                
+                // Re-enable send button
+                sendButton.disabled = false;
+                sendButton.innerHTML = '<span>Send</span>';
+            }, 1000 + Math.random() * 1000);
+        }
+
+        function addMessage(role, content) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const label = role === 'user' ? 'You' : 'ReguFlow Assistant';
+            messageDiv.innerHTML = `
+                <div class="message-label">${label}</div>
+                <p>${content}</p>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function generateResponse(question) {
+            const q = question.toLowerCase();
+            
+            // Check for regulation-specific questions
+            if (q.includes('cac') || q.includes('registration') || q.includes('incorporation')) {
+                return codebaseKnowledge.regulations.cac;
+            }
+            if (q.includes('aml') || q.includes('money laundering') || q.includes('kyc')) {
+                return codebaseKnowledge.regulations.aml;
+            }
+            if (q.includes('share capital') || q.includes('capital requirement') || q.includes('mmo') || q.includes('pssp')) {
+                return codebaseKnowledge.regulations.shareCapital;
+            }
+            if (q.includes('fccpc') || q.includes('lending') || q.includes('consumer protection')) {
+                return codebaseKnowledge.regulations.fccpc;
+            }
+            if (q.includes('ai') || q.includes('artificial intelligence') || q.includes('nitda')) {
+                return codebaseKnowledge.regulations.ai;
+            }
+            
+            // Check for component questions
+            if (q.includes('component') || q.includes('structure') || q.includes('architecture')) {
+                return `ReguFlow is built with React + TypeScript using Vite. Key components include:\n\n• App.tsx (1992 lines) - Main application logic\n• CACRegistrationForm.tsx - 4-step CAC registration wizard\n• Firebase integration for auth and data\n• Gemini AI for regulatory intelligence\n• shadcn/ui component library\n\nThe architecture uses React hooks for state management, React Router for navigation, and Firebase (optional) for backend services.`;
+            }
+            
+            // Check for feature questions
+            if (q.includes('feature') || q.includes('what does') || q.includes('what can')) {
+                return `ReguFlow provides these key features:\n\n1. **Regulatory Search** - AI-powered search for Nigerian and international regulations\n2. **Compliance Analyzer** - Evaluates documents against regulatory requirements\n3. **Roadmap Generator** - Creates step-by-step compliance guides\n4. **CAC Registration** - Complete incorporation workflow\n5. **Expert Booking** - Schedule consultations with regulatory experts\n6. **Chat Interface** - Interactive Q&A for regulatory questions\n\nAll features use Google Gemini AI with specialized Nigerian regulatory context.`;
+            }
+            
+            // Check for regulation overview
+            if (q.includes('regulation') && (q.includes('handle') || q.includes('cover') || q.includes('support'))) {
+                return `ReguFlow covers these Nigerian regulations:\n\n1. **CAC (Corporate Affairs Commission)** - Company registration and CAMA 2020 compliance\n2. **Share Capital Requirements** - CBN-mandated minimums (₦2B for MMO, ₦100M for PSSP, ₦50M for Super Agents)\n3. **AML (Anti-Money Laundering)** - June 10, 2026 deadline for automated monitoring\n4. **FCCPC Lending Guidelines** - Digital lender registration and consumer protection\n5. **AI Governance (NITDA)** - Storage Guard protocols and ethical AI framework\n\nThe system also references NDPR (data protection), CBN circulars, and international frameworks like EU AI Act and AfCFTA.`;
+            }
+            
+            // Check for technical questions
+            if (q.includes('how') && (q.includes('work') || q.includes('implement') || q.includes('build'))) {
+                return `ReguFlow uses a modern tech stack:\n\n**Frontend:** React + TypeScript with Vite for fast builds. shadcn/ui provides accessible components, Tailwind CSS for styling, and motion/react for smooth animations.\n\n**AI Integration:** Google Gemini AI with two specialized contexts - NIGERIAN_REG_CONTEXT for local regulations and INTERNATIONAL_REG_CONTEXT for global compliance.\n\n**Backend:** Firebase (optional) handles authentication via Google OAuth and stores user data in Firestore.\n\n**Key Patterns:** Component composition, React hooks for state, context-aware AI prompts, and progressive enhancement (works without Firebase).`;
+            }
+            
+            // Default response
+            return `I can help you understand the ReguFlow codebase! Here are some things you can ask me about:\n\n• **Regulations**: CAC, AML, Share Capital, FCCPC, AI Governance\n• **Components**: App.tsx, CACRegistrationForm, Firebase integration\n• **Features**: Search, Analyzer, Roadmap, Chat, Booking\n• **Architecture**: Tech stack, state management, routing\n\nTry asking something like "How does the CAC registration flow work?" or "What are the AML requirements?"`;
+        }
+
+        function askQuestion(question) {
+            document.getElementById('chatInput').value = question;
+            sendMessage();
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Compliance docs generation
+        function generateComplianceDocs() {
+            const button = document.getElementById('generateButton');
+            button.disabled = true;
+            button.innerHTML = '<span class="loading"></span><span>Generating...</span>';
+
+            setTimeout(() => {
+                document.getElementById('compliancePlaceholder').style.display = 'none';
+                document.getElementById('complianceReport').style.display = 'block';
+                document.getElementById('reportDate').textContent = new Date().toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                button.disabled = false;
+                button.innerHTML = '<span>📄 Regenerate Report</span>';
+
+                // Scroll to top of report
+                document.getElementById('complianceReport').scrollIntoView({ behavior: 'smooth' });
+            }, 1500);
+        }
+
+        // Initialize
+        console.log('🛡️ ReguFlow Dev Companion initialized');
+        console.log('📋 Codebase knowledge loaded');
+        console.log('✅ Ready to assist with regulatory questions');
+    </script>
+</body>
+</html>
